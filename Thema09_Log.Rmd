@@ -3,5 +3,7 @@ title: "Thema09_Log"
 output: pdf_document
 ---
 
+Personal Access Token: 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
+
 ## Week 1
 
