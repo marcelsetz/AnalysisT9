@@ -5,5 +5,36 @@ output: pdf_document
 
 Personal Access Token: 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
 
+Research question: 
+
 ## Week 1
+
+```{r}
+library(ggplot2)
+library(gridExtra)
+myData <- read.csv("data/Smoker_Epigenetic_df.csv")
+```
+
+```{r}
+columns = colnames(myData[1:4])
+columns <- append(columns, "Columns 5-24")
+type <- c("chr", "chr", "chr", "int", "num")
+descriptions = c("GSM identifier testsubject", "Smoking status", "Gender", "Age", "Methylation Rate of CG Island")
+codebook <- data.frame(columns, type, descriptions)
+codebook
+```
+
+```{r}
+head(myData)
+summary(myData)
+
+p1 <- ggplot(data = myData, mapping = aes(x = Smoking.Status, y = cg00050873)) +
+  geom_boxplot()
+
+p2 <- ggplot(data = myData, mapping = aes(x = Age, y = cg00050873)) +
+  geom_point()
+
+grid.arrange(p1, p2)
+
+```
 
