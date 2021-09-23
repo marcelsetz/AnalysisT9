@@ -3,7 +3,11 @@ title: "Thema09_Log"
 output: pdf_document
 ---
 
-Personal Access Token: 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
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.width = 12,fig.height = 5)
+```
+
+Personal Access Token: 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
 
 Research question: 
 
@@ -12,29 +16,40 @@ Research question:
 ```{r}
 library(ggplot2)
 library(gridExtra)
+library(tidyr)
 myData <- read.csv("data/Smoker_Epigenetic_df.csv")
+myData <- myData %>% drop_na()
 ```
 
 ```{r}
+library(pander)
+library(ggbiplot)
+pander(head(myData))
+pander(summary(myData))
+
 columns = colnames(myData[1:4])
 columns <- append(columns, "Columns 5-24")
 type <- c("chr", "chr", "chr", "int", "num")
 descriptions = c("GSM identifier testsubject", "Smoking status", "Gender", "Age", "Methylation Rate of CG Island")
 codebook <- data.frame(columns, type, descriptions)
-codebook
+pander(codebook)
 ```
 
 ```{r}
-head(myData)
-summary(myData)
+plotfunction <- function(cg){
+  ggplot(data = myData, mapping = aes_string(x = "Age", y = cg)) +
+    geom_point(aes(shape = factor(Gender), color = factor(Smoking.Status))) +
+    labs(caption = paste(cg, ": Scatterplot visualizing the cg values of different ages and genders.")) +
+    ylab(paste("CpG Island: ", cg))
+}
+lapply(names(myData[c(5:24)]), plotfunction)
 
-p1 <- ggplot(data = myData, mapping = aes(x = Smoking.Status, y = cg00050873)) +
-  geom_boxplot()
+```
 
-p2 <- ggplot(data = myData, mapping = aes(x = Age, y = cg00050873)) +
-  geom_point()
+```{r}
 
-grid.arrange(p1, p2)
+myData.pca <- prcomp(myData[,c(5:24)], center = TRUE,scale. = FALSE)
 
+ggbiplot(myData.pca)
 ```
 
