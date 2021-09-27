@@ -1,0 +1,147 @@
+---
+title: "Thema09_EDA"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.width = 12,fig.height = 5, warning = FALSE, message = FALSE)
+options(warn = 0)
+library(ggplot2, quietly = TRUE)
+library(gridExtra, quietly = TRUE)
+library(tidyr, quietly = TRUE)
+library(pander, quietly = TRUE)
+library(ggbiplot, quietly = TRUE)
+library(dplyr, quietly = TRUE)
+library(kableExtra, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+```
+
+
+# EDA
+## Smoker epigenetic dataset
+A CpG island or CpG site is a part of the DNA where the GC content is greater than 50%. In this dataset methylation values of certain CpG sites are displayed with also the age, gender and smoking status for 671 people.
+
+## Research Question
+Is it possible to identify a person's gender, age or status of smoking with certain given CpG values using Machine Learning?
+
+## Codebook
+```{r}
+myData <- read.csv("data/Smoker_Epigenetic_df.csv")
+myData <- myData %>% drop_na()
+
+columns = colnames(myData[1:4])
+columns <- append(columns, "Columns 5-24")
+names <- c("Sample Accessions numbers", "Smoking status", "Gender", "Age", "CG Island")
+type <- c("chr", "chr", "chr", "int", "num")
+unit <- c(NA, "current/never", "f/m", NA, NA)
+descriptions = c("GSM identifier testsubject", "Wether the person is smoking or not", "Gender", "Age", "Methylation Rate of CG Island")
+codebook <- data.frame(columns, names, type, descriptions)
+write.csv(codebook, "Codebook.csv", row.names = FALSE)
+knitr::kable(codebook)
+```
+\newpage
+
+## Data exploration
+### Visualization
+
+```{r}
+subsetdata <- head(myData)
+dataset <- subsetdata[1:6]
+knitr::kable(dataset) %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1, bold = TRUE)
+
+dataset <- subsetdata[c(1, 7:12)]
+knitr::kable(dataset) %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1, bold = TRUE)
+
+dataset <- subsetdata[c(1, 13:18)]
+knitr::kable(dataset) %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1, bold = TRUE)
+
+dataset <- subsetdata[c(1, 19:24)]
+knitr::kable(dataset) %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1, bold = TRUE)
+```
+\newpage
+
+```{r}
+data_sum <- summary(myData)
+data_sum
+
+```
+
+\newpage
+Below there are some histograms which visualizes the distribution of smoking status, age and gender. 
+
+```{r}
+ggplot(myData, aes(x=Smoking.Status)) +
+  geom_histogram(stat="count", fill = c("pink", "lightblue"), col = "black") +
+  ylim(0, 600) +
+  labs(caption = "Figure 3.1: Number of people who are smoking") +
+  theme(plot.caption = element_text(size=16)) +
+  theme(plot.caption = element_text(size=16, face="italic")) +
+  theme(axis.text = element_text(size = 20)) +
+  theme(axis.title = element_text(size = 20, face="bold"))
+
+ggplot(myData, aes(x=Gender)) +
+  geom_histogram(stat="count", fill = c("pink", "lightblue"), col = "black") +
+  ylim(0, 600) +
+  labs(caption = "Figure 3.2: Gender distribution") +
+  theme(plot.caption = element_text(size=16)) +
+  theme(plot.caption = element_text(size=16, face="italic")) +
+  theme(axis.text = element_text(size = 20)) +
+  theme(axis.title = element_text(size = 20, face="bold"))
+
+ggplot(myData, aes(x=Age)) +
+  geom_histogram(fill = "lightgrey", col = "black") +
+  labs(caption = "Figure 3.3: Age distribution") +
+  theme(plot.caption = element_text(size=16, face="italic")) +
+  theme(axis.text = element_text(size = 20)) +
+  theme(axis.title = element_text(size = 20, face="bold"))
+
+```
+
+
+### Plotting the data
+These are all the CpG sites plotted against age, with smokin status as color groups and gender as shape groups. What stands out here is that you see two groups in almost every graph, one of men and one of women, so apparently the cg methylation rate is different between men and women.
+
+```{r, results = FALSE}
+plotfunction <- function(cg){
+  ggplot(data = myData, mapping = aes_string(x = "Age", y = cg)) +
+    geom_point(aes(shape = factor(Gender), color = factor(Smoking.Status))) +
+    labs(caption = paste(cg, ": Scatterplot visualizing the cg values of different ages and genders.")) +
+    theme(plot.caption = element_text(size=16, face="italic")) +
+    theme(axis.text = element_text(size = 20)) +
+    theme(axis.title = element_text(size = 20, face="bold")) +
+    theme(legend.text = element_text(size = 16)) +
+    theme(legend.title = element_text(size=16)) +
+    ylab(paste("CpG Island: ", cg))
+}
+lapply(names(myData[c(5:24)]), plotfunction)
+
+```
+
+
+### PCA
+These PCA plots show quite the same thing as previous graphs. But there is a slight difference in smoking status where the current smoking group is slightly to the left. This can also be, because there is a huge different in the number of current smokers and non-smokers. In the age graph, all males are left and all females are right with no exceptions. The graph is a bit scaled to make it more readable.
+
+```{r}
+myData.pca <- prcomp(myData[,c(5:24)], center = TRUE, scale. = FALSE)
+summary(myData.pca)
+ggbiplot(myData.pca, ellipse = TRUE, circle = TRUE, scale = 0.5, groups = myData$Smoking.Status) + 
+  labs(caption = "Figure 3.4: PCA graph displaying smoking status as different groups") +
+  theme(plot.caption = element_text(size=16, face="italic")) +
+  theme(axis.text = element_text(size = 20)) +
+  theme(axis.title = element_text(size = 20, face="bold"))
+
+ggbiplot(myData.pca, ellipse = TRUE, circle = TRUE, scale = 0.5, groups = myData$Gender) + 
+  labs(caption = "Figure 3.4: PCA graph displaying gender as different groups") +
+  theme(plot.caption = element_text(size=16, face="italic")) +
+  theme(axis.text = element_text(size = 20)) +
+  theme(axis.title = element_text(size = 20, face="bold"))
+```
+
