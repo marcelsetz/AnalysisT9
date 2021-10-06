@@ -1,0 +1,6 @@
+"columns","names","type","descriptions"
+"GSM","Sample Accessions numbers","chr","GSM identifier testsubject"
+"Smoking.Status","Smoking status","chr","Wether the person is smoking or not"
+"Gender","Gender","chr","Gender"
+"Age","Age","int","Age"
+"Columns 5-24","CG Island","num","Methylation Rate of CG Island"

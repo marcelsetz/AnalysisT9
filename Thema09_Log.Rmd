@@ -1,0 +1,193 @@
+---
+title: "Thema09_Log"
+author: "Marcel Setz"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.width = 12,fig.height = 5, warning = FALSE, message = FALSE)
+options(warn = 0)
+library(ggplot2, quietly = TRUE)
+library(gridExtra, quietly = TRUE)
+library(tidyr, quietly = TRUE)
+library(pander, quietly = TRUE)
+library(ggbiplot, quietly = TRUE)
+library(dplyr, quietly = TRUE)
+library(kableExtra, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+```
+
+
+# Introduction
+## Smoker epigenetic dataset
+A CpG island or CpG site is a part of the DNA where the GC content is greater than 50%. In this dataset methylation values of certain CpG sites are displayed with also the age, gender and smoking status for 671 people.
+
+## Research Question
+Is it possible to identify a person's gender, age or status of smoking given their CpG values?
+
+\newpage
+# EDA
+## Codebook
+```{r}
+myData <- read.csv("data/Smoker_Epigenetic_df.csv")
+myData <- myData %>% drop_na()
+
+columns = colnames(myData[1:4])
+columns <- append(columns, "Columns 5-24")
+names <- c("Sample Accessions numbers", "Smoking status", "Gender", "Age", "CG Island")
+type <- c("chr", "chr", "chr", "int", "num")
+unit <- c(NA, "current/never", "f/m", NA, NA)
+descriptions = c("GSM identifier testsubject", "Wether the person is smoking or not", "Gender", "Age", "Methylation Rate of CG Island")
+codebook <- data.frame(columns, names, type, descriptions)
+write.csv(codebook, "Codebook.csv", row.names = FALSE)
+knitr::kable(codebook)
+```
+\newpage
+
+## Data exploration
+### Visualization
+
+```{r CpG-tables}
+subsetdata <- head(myData)
+dataset <- subsetdata[1:7]
+knitr::kable(dataset) %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1, bold = TRUE)
+
+dataset <- subsetdata[c(1, 8:13)]
+knitr::kable(dataset) %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1, bold = TRUE)
+
+dataset <- subsetdata[c(1, 14:19)]
+knitr::kable(dataset) %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1, bold = TRUE)
+
+dataset <- subsetdata[c(1, 20:24)]
+knitr::kable(dataset) %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1, bold = TRUE)
+```
+\newpage
+
+```{r}
+data_sum <- summary(myData)
+data_sum
+```
+
+\newpage
+Below there are some histograms which visualizes the distribution of smoking status, age and gender. 
+
+```{r}
+ggplot(myData, aes(x=Smoking.Status)) +
+  geom_histogram(stat="count", fill = c("pink", "lightblue"), col = "black") +
+  ylim(0, 600) +
+  labs(caption = "Figure 1: Number of people who are smoking") +
+  theme(plot.caption = element_text(size=16)) +
+  theme(plot.caption = element_text(size=16, face="italic")) +
+  theme(axis.text = element_text(size = 20)) +
+  theme(axis.title = element_text(size = 20, face="bold"))
+
+ggplot(myData, aes(x=Gender)) +
+  geom_histogram(stat="count", fill = c("pink", "lightblue"), col = "black") +
+  ylim(0, 600) +
+  labs(caption = "Figure 2: Gender distribution") +
+  theme(plot.caption = element_text(size=16)) +
+  theme(plot.caption = element_text(size=16, face="italic")) +
+  theme(axis.text = element_text(size = 20)) +
+  theme(axis.title = element_text(size = 20, face="bold"))
+
+ggplot(myData, aes(x=Age)) +
+  geom_histogram(fill = "lightgrey", col = "black") +
+  labs(caption = "Figure 3: Age distribution") +
+  theme(plot.caption = element_text(size=16, face="italic")) +
+  theme(axis.text = element_text(size = 20)) +
+  theme(axis.title = element_text(size = 20, face="bold"))
+
+```
+
+
+### Plotting the data
+These are all the CpG sites plotted against age, with smokin status as color groups and gender as shape groups. A few of the CpG islands have been removed, becaused they looked very similar. What stands out here is that you see two groups in almost every graph, one of men and one of women, so apparently the cg methylation rate is different between men and women.
+
+```{r, results = FALSE}
+plotfunction <- function(cg){
+  ggplot(data = myData, mapping = aes_string(x = "Age", y = cg)) +
+    geom_point(aes(shape = factor(Gender), color = factor(Smoking.Status))) +
+    labs(caption = paste(cg, ": Scatterplot visualizing the methylation rate on this CpG island of different ages and genders.")) +
+    theme(plot.caption = element_text(size=14, face="italic")) +
+    theme(axis.text = element_text(size = 20)) +
+    theme(axis.title = element_text(size = 20, face="bold")) +
+    theme(legend.text = element_text(size = 16)) +
+    theme(legend.title = element_text(size=16)) +
+    ylab(paste("CpG Island: ", cg))
+}
+lapply(names(myData[c(5, 6, 7, 9, 10, 15, 20)]), plotfunction)
+
+```
+
+
+With the age distribution in mind, let's try to plot 2 methylation rates with the age factored as groups.
+
+```{r}
+
+age.groups <- cut(myData$Age, breaks = c(20, 35, 55, 80), labels = c("20-35y", "36-55y", "55-80y"))
+
+myData$ClassAge <- factor(age.groups)
+ggplot(data = myData, mapping = aes(x = ClassAge, y = cg00050873, fill = Smoking.Status)) +
+    geom_boxplot() +
+    labs(caption = paste("cg00050873: Scatterplot visualizing the methylation rate on this CpG island of different ages and genders.")) +
+    theme(plot.caption = element_text(size=14, face="italic")) +
+    theme(axis.text = element_text(size = 20)) +
+    theme(axis.title = element_text(size = 20, face="bold")) +
+    theme(legend.text = element_text(size = 16)) +
+    theme(legend.title = element_text(size=16)) +
+    ylab(paste("CpG Island: cg00050873")) +
+    xlab("Age")
+
+ggplot(data = myData, mapping = aes(x = ClassAge, y = cg03706273, fill = Smoking.Status)) +
+    geom_boxplot() +
+    labs(caption = paste("cg03706273: Scatterplot visualizing the methylation rate on this CpG island of different ages and genders.")) +
+    theme(plot.caption = element_text(size=14, face="italic")) +
+    theme(axis.text = element_text(size = 20)) +
+    theme(axis.title = element_text(size = 20, face="bold")) +
+    theme(legend.text = element_text(size = 16)) +
+    theme(legend.title = element_text(size=16)) +
+    ylab(paste("CpG Island: cg03706273")) +
+    xlab("Age")
+
+```
+
+
+# Results
+These PCA plots show quite the same thing as previous graphs. But there is a slight difference in smoking status where the current smoking group is slightly to the left. This can also be, because there is a huge different in the number of current smokers and non-smokers. In the age graph, all males are left and all females are right with no exceptions. The graph is a bit scaled to make it more readable.
+
+```{r, echo = FALSE}
+myData.pca <- prcomp(myData[,c(5:24)], center = TRUE, scale. = FALSE)
+summary(myData.pca)
+ggbiplot(myData.pca, ellipse = TRUE, circle = TRUE, scale = 0.5, groups = myData$Smoking.Status) + 
+  labs(caption = "Figure 4: PCA graph displaying smoking status as different groups") +
+  theme(plot.caption = element_text(size=16, face="italic")) +
+  theme(axis.text = element_text(size = 20)) +
+  theme(axis.title = element_text(size = 20, face="bold")) +
+    theme(legend.text = element_text(size = 16)) +
+    theme(legend.title = element_text(size=16))
+
+ggbiplot(myData.pca, ellipse = TRUE, circle = TRUE, scale = 0.5, groups = myData$Gender) + 
+  labs(caption = "Figure 5: PCA graph displaying gender as different groups") +
+  theme(plot.caption = element_text(size=16, face="italic")) +
+  theme(axis.text = element_text(size = 20)) +
+  theme(axis.title = element_text(size = 20, face="bold")) +
+    theme(legend.text = element_text(size = 16)) +
+    theme(legend.title = element_text(size=16))
+```
+\newpage
+
+# Conclusion and Discussion
+The data shows that there are significant differences in methylation on most CpG islands between males and females. Underlying relations between smoking or age are not significant enough. However the smoking data shows a slight difference between current and never smokers in the PCA plot. There are no weird outliers or other weird points in the data. The data is not suitable enough to partition in classes, because age isn't really influencing the methylation rate. Even when the data is factored, there is no significant pattern in the plot. So there is probably no relation between age and methylation rate. So to refer to the research question: Using the methylation rate of certain CpG islands, you can say that it is independant from age and somewhat dependant on smoking status and extremely dependant on gender.
+
+
