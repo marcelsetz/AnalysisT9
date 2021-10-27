@@ -19,22 +19,18 @@ library(dplyr, quietly = TRUE)
 library(kableExtra, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
 ```
-
-# Week 1 and 2
-## Introduction
-### Smoker epigenetic dataset
+\newpage
+# Introduction
 A CpG island or CpG site is a part of the DNA where the GC content is greater than 50%. In this dataset methylation values of certain CpG sites are displayed with also the age, gender and smoking status for 671 people.
 
-### Research Question
+# Research Question
 Is it possible to identify a person's gender, age or status of smoking given their CpG values?
 
-\newpage
-## EDA
-### Codebook
+# Data exploration
+## Codebook & Reading the data
 ```{r}
 myData <- read.csv("data/Smoker_Epigenetic_df.csv")
 myData <- myData %>% drop_na()
-write.csv(myData, "data/Smoker_Epigenetic_df.csv")
 
 columns = colnames(myData[1:4])
 columns <- append(columns, "Columns 5-24")
@@ -46,10 +42,8 @@ codebook <- data.frame(columns, names, type, descriptions)
 write.csv(codebook, "Codebook.csv", row.names = FALSE)
 knitr::kable(codebook)
 ```
-\newpage
 
-### Data exploration
-#### Visualization
+## Summary
 
 ```{r CpG-tables}
 subsetdata <- head(myData)
@@ -81,6 +75,8 @@ data_sum
 ```
 
 \newpage
+# Visualization
+## Distribution plots
 Below there are some histograms which visualizes the distribution of smoking status, age and gender. 
 
 ```{r}
@@ -112,7 +108,8 @@ ggplot(myData, aes(x=Age)) +
 ```
 
 
-#### Plotting the data
+## Plotting the data
+### Scatterplots
 These are all the CpG sites plotted against age, with smokin status as color groups and gender as shape groups. A few of the CpG islands have been removed, becaused they looked very similar. What stands out here is that you see two groups in almost every graph, one of men and one of women, so apparently the cg methylation rate is different between men and women.
 
 ```{r, results = FALSE}
@@ -131,7 +128,7 @@ lapply(names(myData[c(5, 6, 7, 9, 10, 15, 20)]), plotfunction)
 
 ```
 
-
+## Comparing two variables
 With the age distribution in mind, let's try to plot 2 methylation rates with the age factored as groups.
 
 ```{r}
@@ -163,19 +160,15 @@ ggplot(data = myData, mapping = aes(x = ClassAge, y = cg03706273, fill = Smoking
 
 ```
 
-# Week 3
-## Cleaning Data
-
-Wrote a results section with cleaned and analyzed data and a conclusion/discussion section with the conclusion of the data and research question.
-
-# Week 4
+# Data mining
 ## Quality metrics
+In this week we define the best algorithm for our data with true positive, false positive, true negative and false negative.
 
 ## Algorithms
-ZeroR, OneR, J48, NaiveBayes, IBK, Simple Logistics, SMO, Random Forest
+The algorithms we are going to compare are: ZeroR, OneR, J48, NaiveBayes, IBK, Simple Logistics, SMO and Random Forest. Below you can see a table with the most important results of all algorithms.
 
 ```{r}
-ML_dataLoc <- "data/Smoker_Epigenetic_df_Experiment.csv"
+ML_dataLoc <- "data/Smoker_Epigenetic_dfExperiment.csv"
 ML_data <- read.csv(ML_dataLoc)
 ML_ZeroR <- ML_data[c(1:100),]
 ML_OneR <- ML_data[c(101:200),]
@@ -186,7 +179,7 @@ ML_SimpleLog <- ML_data[c(501:600),]
 ML_SMO <- ML_data[c(601:700),]
 ML_RandomForest <- ML_data[c(701:800),]
 algos <- list(ML_ZeroR, ML_OneR, ML_J48, ML_IBK, ML_NaiveBayes, ML_SimpleLog, ML_SMO, ML_RandomForest)
-ML_ZeroR
+
 avgs_pc <- list()
 avgs_pi <- list()
 avgs_tp <- list()
@@ -256,21 +249,25 @@ vec_roc <- unlist(avgs_roc)
 
 avgs_df$percent_correct_avgs <- vec_pc
 avgs_df$percent_incorrect_avgs <- vec_pi
-avgs_df$TP_avgs <- vec_tp
-avgs_df$FP_avgs <- vec_fp
-avgs_df$TN_avgs <- vec_tn
-avgs_df$FN_avgs <- vec_fn
+avgs_df$TP_sum <- vec_tp
+avgs_df$FP_sum <- vec_fp
+avgs_df$TN_sum <- vec_tn
+avgs_df$FN_sum <- vec_fn
 avgs_df$precision_avgs <- vec_pr
 avgs_df$recall_avgs <- vec_rc
 avgs_df$ROC_Area_avgs <- vec_roc
 
-avgs_df
+knitr::kable(avgs_df)
 write.csv(avgs_df, file = "data/Smoker_Epigenetic_df_Summary.csv")
 
 ```
+![The generated tree of the J48 algorithm. Apparently these CpG islands say the most about whether a person smokes or not.](data/J48Tree.png)
 
 
 
+# Discussion 
+So far we don't have a concrete answer to the research question, because the algorithms aren't extremely overwhelming. So for now it isn't really possible to determine whether someone is smoking or not, because the data is too much spreaded out and not really divided into groups.
 
+It's quite obvious that every algorithm except for NaiveBayes are very close to eachother, the only significant lower scores according to weka are NaiveBayes and OneR, the best (not really significant) algorithm are surprisingly ZeroR, J48, SimpleLogistics and SMO. 
 
 
