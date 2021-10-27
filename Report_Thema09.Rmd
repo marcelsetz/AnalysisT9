@@ -1,0 +1,36 @@
+---
+title: "Report"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Results
+These PCA plots show quite the same thing as previous graphs. But there is a slight difference in smoking status where the current smoking group is slightly to the left. This can also be, because there is a huge different in the number of current smokers and non-smokers. In the age graph, all males are left and all females are right with no exceptions. The graph is a bit scaled to make it more readable.
+
+```{r, echo = FALSE}
+myData.pca <- prcomp(myData[,c(5:24)], center = TRUE, scale. = FALSE)
+summary(myData.pca)
+ggbiplot(myData.pca, ellipse = TRUE, circle = TRUE, scale = 0.5, groups = myData$Smoking.Status) + 
+  labs(caption = "Figure 4: PCA graph displaying smoking status as different groups") +
+  theme(plot.caption = element_text(size=16, face="italic")) +
+  theme(axis.text = element_text(size = 20)) +
+  theme(axis.title = element_text(size = 20, face="bold")) +
+    theme(legend.text = element_text(size = 16)) +
+    theme(legend.title = element_text(size=16))
+
+ggbiplot(myData.pca, ellipse = TRUE, circle = TRUE, scale = 0.5, groups = myData$Gender) + 
+  labs(caption = "Figure 5: PCA graph displaying gender as different groups") +
+  theme(plot.caption = element_text(size=16, face="italic")) +
+  theme(axis.text = element_text(size = 20)) +
+  theme(axis.title = element_text(size = 20, face="bold")) +
+    theme(legend.text = element_text(size = 16)) +
+    theme(legend.title = element_text(size=16))
+```
+\newpage
+
+# Conclusion and Discussion
+The data shows that there are significant differences in methylation on most CpG islands between males and females. Underlying relations between smoking or age are not significant enough. However the smoking data shows a slight difference between current and never smokers in the PCA plot. There are no weird outliers or other weird points in the data. The data is not suitable enough to partition in classes, because age isn't really influencing the methylation rate. Even when the data is factored, there is no significant pattern in the plot. So there is probably no relation between age and methylation rate. So to refer to the research question: Using the methylation rate of certain CpG islands, you can say that it is independant from age and somewhat dependant on smoking status and extremely dependant on gender.
+
