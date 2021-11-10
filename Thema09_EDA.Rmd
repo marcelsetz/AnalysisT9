@@ -5,6 +5,16 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, fig.width = 12,fig.height = 5, warning = FALSE, message = FALSE)
+options(warn = 0)
+library(ggplot2, quietly = TRUE)
+library(gridExtra, quietly = TRUE)
+library(tidyr, quietly = TRUE)
+library(pander, quietly = TRUE)
+library(ggbiplot, quietly = TRUE)
+library(dplyr, quietly = TRUE)
+library(kableExtra, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
 ```
 
 # Introduction
