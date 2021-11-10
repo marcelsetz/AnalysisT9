@@ -19,6 +19,7 @@
 
 # RStudio files
 .Rproj.user/
+.Rproj
 
 # produced vignettes
 vignettes/*.html
@@ -43,3 +44,9 @@ docs/
 
 # translation temp files
 po/*~
+
+# Latex
+.aux
+.log
+.out
+.tex

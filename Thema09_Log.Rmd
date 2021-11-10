@@ -24,7 +24,7 @@ library(tidyverse, quietly = TRUE)
 A CpG island or CpG site is a part of the DNA where the GC content is greater than 50%. In this dataset methylation values of certain CpG sites are displayed with also the age, gender and smoking status for 671 people.
 
 # Research Question
-Is it possible to identify a person's gender, age or status of smoking given their CpG values?
+Is it possible to identify a person's gender, age or status of smoking given their methylation values on CpG islands?
 
 # Data exploration
 ## Codebook & Reading the data
@@ -136,6 +136,7 @@ With the age distribution in mind, let's try to plot 2 methylation rates with th
 age.groups <- cut(myData$Age, breaks = c(20, 35, 55, 80), labels = c("20-35y", "36-55y", "55-80y"))
 
 myData$ClassAge <- factor(age.groups)
+
 ggplot(data = myData, mapping = aes(x = ClassAge, y = cg00050873, fill = Smoking.Status)) +
     geom_boxplot() +
     labs(caption = paste("cg00050873: Scatterplot visualizing the methylation rate on this CpG island of different ages and genders.")) +
@@ -168,106 +169,139 @@ In this week we define the best algorithm for our data with true positive, false
 The algorithms we are going to compare are: ZeroR, OneR, J48, NaiveBayes, IBK, Simple Logistics, SMO and Random Forest. Below you can see a table with the most important results of all algorithms.
 
 ```{r}
-ML_dataLoc <- "data/Smoker_Epigenetic_dfExperiment.csv"
-ML_data <- read.csv(ML_dataLoc)
-ML_ZeroR <- ML_data[c(1:100),]
-ML_OneR <- ML_data[c(101:200),]
-ML_J48 <- ML_data[c(201:300),]
-ML_IBK <- ML_data[c(301:400),]
-ML_NaiveBayes <- ML_data[c(401:500),]
-ML_SimpleLog <- ML_data[c(501:600),]
-ML_SMO <- ML_data[c(601:700),]
-ML_RandomForest <- ML_data[c(701:800),]
-algos <- list(ML_ZeroR, ML_OneR, ML_J48, ML_IBK, ML_NaiveBayes, ML_SimpleLog, ML_SMO, ML_RandomForest)
+ML_dataLoc_Smoke <- "data/Smoker_Epigenetic_dfExperimentSmoke.csv"
+ML_dataLoc_Gender <- "data/Smoker_Epigenetic_dfExperimentGender.csv"
+files <- list(ML_dataLoc_Smoke, ML_dataLoc_Gender)
 
-avgs_pc <- list()
-avgs_pi <- list()
-avgs_tp <- list()
-avgs_fp <- list()
-avgs_tn <- list()
-avgs_fn <- list()
-avgs_pr <- list()
-avgs_rc <- list()
-avgs_roc <- list()
+count <- 0
+for (ML_dataLoc in files)
+{
+  count <- count + 1
+  if (count == 1)
+  {
+    file <- "Smoke"
+  }
+  else
+  {
+    file <- "Gender"
+  }
+  
+  ML_data <- read.csv(ML_dataLoc)
+  ML_ZeroR <- ML_data[c(1:100),]
+  ML_OneR <- ML_data[c(101:200),]
+  ML_J48 <- ML_data[c(201:300),]
+  ML_IBK <- ML_data[c(301:400),]
+  ML_NaiveBayes <- ML_data[c(401:500),]
+  ML_SimpleLog <- ML_data[c(501:600),]
+  ML_SMO <- ML_data[c(601:700),]
+  ML_RandomForest <- ML_data[c(701:800),]
+  algos <- list(ML_ZeroR, ML_OneR, ML_J48, ML_IBK, ML_NaiveBayes, ML_SimpleLog, ML_SMO, ML_RandomForest)
+  
+  avgs_pc <- list()
+  avgs_pi <- list()
+  avgs_tp <- list()
+  avgs_fp <- list()
+  avgs_tn <- list()
+  avgs_fn <- list()
+  avgs_pr <- list()
+  avgs_rc <- list()
+  avgs_roc <- list()
 
-for (algo in algos) {
-  percent_correct <- algo[3]
-  avg <- lapply(percent_correct, mean)
-  avgs_pc[[length(avgs_pc) + 1]] <- avg
-}
-for (algo in algos) {
-  percent_incorrect <- algo[4]
-  avg <- lapply(percent_incorrect, mean)
-  avgs_pi[[length(avgs_pi) + 1]] <- avg
-}
-for (algo in algos) {
-  TP <- algo[5]
-  avg <- lapply(TP, sum)
-  avgs_tp[[length(avgs_tp) + 1]] <- avg
-}
-for (algo in algos) {
-  FP <- algo[6]
-  avg <- lapply(FP, sum)
-  avgs_fp[[length(avgs_fp) + 1]] <- avg
-}
-for (algo in algos) {
-  TN <- algo[7]
-  avg <- lapply(TN, sum)
-  avgs_tn[[length(avgs_tn) + 1]] <- avg
-}
-for (algo in algos) {
-  FN <- algo[8]
-  avg <- lapply(FN, sum)
-  avgs_fn[[length(avgs_fn) + 1]] <- avg
-}
-for (algo in algos) {
-  precision <- algo[9]
-  avg <- lapply(precision, mean)
-  avgs_pr[[length(avgs_pr) + 1]] <- avg
-}
-for (algo in algos) {
-  recall <- algo[10]
-  avg <- lapply(recall, mean)
-  avgs_rc[[length(avgs_rc) + 1]] <- avg
-}
-for (algo in algos) {
-  roc_area <- algo[11]
-  avg <- lapply(roc_area, mean)
-  avgs_roc[[length(avgs_roc) + 1]] <- avg
-}
-avgs_df <- data.frame(row.names = c("ZeroR", "OneR", "J48", "IBK", "NaiveBayes", "SimpleLogistics", "SMO", "RandomForest"))
+  for (algo in algos) {
+    percent_correct <- algo[3]
+    avg <- lapply(percent_correct, mean)
+    avgs_pc[[length(avgs_pc) + 1]] <- avg
+  }
+  for (algo in algos) {
+    percent_incorrect <- algo[4]
+    avg <- lapply(percent_incorrect, mean)
+    avgs_pi[[length(avgs_pi) + 1]] <- avg
+  }
+  for (algo in algos) {
+    TP <- algo[5]
+    avg <- lapply(TP, sum)
+    avgs_tp[[length(avgs_tp) + 1]] <- avg
+  }
+  for (algo in algos) {
+    FP <- algo[6]
+    avg <- lapply(FP, sum)
+    avgs_fp[[length(avgs_fp) + 1]] <- avg
+  }
+  for (algo in algos) {
+    TN <- algo[7]
+    avg <- lapply(TN, sum)
+    avgs_tn[[length(avgs_tn) + 1]] <- avg
+  }
+  for (algo in algos) {
+    FN <- algo[8]
+    avg <- lapply(FN, sum)
+    avgs_fn[[length(avgs_fn) + 1]] <- avg
+  }
+  for (algo in algos) {
+    precision <- algo[9]
+    avg <- lapply(precision, mean)
+    avgs_pr[[length(avgs_pr) + 1]] <- avg
+  }
+  for (algo in algos) {
+    recall <- algo[10]
+    avg <- lapply(recall, mean)
+    avgs_rc[[length(avgs_rc) + 1]] <- avg
+  }
+  for (algo in algos) {
+    roc_area <- algo[11]
+    avg <- lapply(roc_area, mean)
+    avgs_roc[[length(avgs_roc) + 1]] <- avg
+  }
+  avgs_df <- data.frame(row.names = c("ZeroR", "OneR", "J48", "IBK", "NaiveBayes", "SimpleLogistics", "SMO", "RandomForest"))
 
-vec_pc <- unlist(avgs_pc)
-vec_pi <- unlist(avgs_pi)
-vec_tp <- unlist(avgs_tp)
-vec_fp <- unlist(avgs_fp)
-vec_tn <- unlist(avgs_tn)
-vec_fn <- unlist(avgs_fn)
-vec_pr <- unlist(avgs_pr)
-vec_rc <- unlist(avgs_rc)
-vec_roc <- unlist(avgs_roc)
+  vec_pc <- unlist(avgs_pc)
+  vec_pi <- unlist(avgs_pi)
+  vec_tp <- unlist(avgs_tp)
+  vec_fp <- unlist(avgs_fp)
+  vec_tn <- unlist(avgs_tn)
+  vec_fn <- unlist(avgs_fn)
+  vec_pr <- unlist(avgs_pr)
+  vec_rc <- unlist(avgs_rc)
+  vec_roc <- unlist(avgs_roc)
+  
+  avgs_df$percent_correct_avgs <- vec_pc
+  avgs_df$percent_incorrect_avgs <- vec_pi
+  avgs_df$TP_sum <- vec_tp
+  avgs_df$FP_sum <- vec_fp
+  avgs_df$TN_sum <- vec_tn
+  avgs_df$FN_sum <- vec_fn
+  avgs_df$precision_avgs <- vec_pr
+  avgs_df$recall_avgs <- vec_rc
+  avgs_df$ROC_Area_avgs <- vec_roc
+  
+  knitr::kable(avgs_df)
+  filepath <- paste("data/Smoker_Epigenetic_df_Summary_", file, ".csv", sep = "")
+  
+  write.csv(avgs_df, file = filepath)
+}
 
-avgs_df$percent_correct_avgs <- vec_pc
-avgs_df$percent_incorrect_avgs <- vec_pi
-avgs_df$TP_sum <- vec_tp
-avgs_df$FP_sum <- vec_fp
-avgs_df$TN_sum <- vec_tn
-avgs_df$FN_sum <- vec_fn
-avgs_df$precision_avgs <- vec_pr
-avgs_df$recall_avgs <- vec_rc
-avgs_df$ROC_Area_avgs <- vec_roc
-
-knitr::kable(avgs_df)
-write.csv(avgs_df, file = "data/Smoker_Epigenetic_df_Summary.csv")
 
 ```
-![The generated tree of the J48 algorithm. Apparently these CpG islands say the most about whether a person smokes or not.](data/J48Tree.png)
+![The generated tree of the J48 algorithm with the smoking status as class. Apparently these CpG islands say the most about whether a person smokes or not.](data/J48Tree.png)
 
 
 
-# Discussion 
+# Conclusion & Discussion 
 So far we don't have a concrete answer to the research question, because the algorithms aren't extremely overwhelming. So for now it isn't really possible to determine whether someone is smoking or not, because the data is too much spreaded out and not really divided into groups.
 
-It's quite obvious that every algorithm except for NaiveBayes are very close to eachother, the only significant lower scores according to weka are NaiveBayes and OneR, the best (not really significant) algorithm are surprisingly ZeroR, J48, SimpleLogistics and SMO. 
+It's quite obvious that the percentage of correctly classified instances of every algorithm except for NaiveBayes are very close to eachother, the only significant lower scores according to weka are NaiveBayes and OneR, the best (not really significant) algorithm are surprisingly ZeroR, J48, SimpleLogistics and SMO. However it's quite remarkable that the ROC-area and the precision are the highest on NaiveBayes. So even though the results are disappointing, this is the best algorithm according to these quality metrics.
 
+The Data with the gender as class is quite more interesting, these algorithms have a way higher area under the curve and correctly classified instance percentage.
 
+For the Java wrapper, it is probably the best to use the data with the gender class, because this is way more reliable than the smoking status. Even though it sounds a bit odd to predict gender with the methylation rate of certain CpG islands.
+
+One possible purpose for the use of the gender class may be for forensic research. If some suspect need to be found, it's a way to find out if the suspect is male or female.
+
+After some research I found out what the reason for this remarkable difference is. These differences have everything to do with the diversity of the transcriptomic and proteomic profiles in the two sexes. [1]
+
+![The ROC curve of the J48 algorithm using the current class. Not much is going on here, this algorithms gives almost no information.](data/ROC-Curve-J48.png)
+
+![The ROC curve of the NaiveBayes algorithm using the current class. It's still quite straight, but not as straight as the J48 ROC curve](data/ROC-Curve-NaiveBayes.png)
+
+# Sources
+[1] Yusipov, I., Bacalini, M. G., Kalyakulina, A., Krivonosov, M., Pirazzini, C., Gensous, N., Ravaioli, F., Milazzo, M., Giuliani, C., Vedunova, M., Fiorito, G., Gagliardi, A., Polidoro, S., Garagnani, P., Ivanchenko, M., & Franceschi, C. (2020). Age-related DNA methylation changes are sex-specific: a comprehensive assessment. Aging, 12(23), 24057–24080. https://doi.org/10.18632/aging.202251
